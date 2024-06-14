@@ -1,3 +1,6 @@
 /code/CMakeCache.txt
 /code/CMakeFiles/
 /code/Makefile
+/code/build/
+build/
+.vscode
