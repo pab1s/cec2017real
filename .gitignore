@@ -3,4 +3,6 @@
 /code/Makefile
 /code/build/
 build/
+papers
 .vscode
+/code/results_*
