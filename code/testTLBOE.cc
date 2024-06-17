@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
     const int seed = 43;
     const int T = 10;
     const double lower_bound = -100.0, upper_bound = 100.0;
-    const int num_learners = 30;
+    const int num_learners = 50;
     const int max_evals = 10000 * dim;
     double mean_fitness = 0.0;
 

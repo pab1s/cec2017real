@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
     const int seed = 43;
     const int T = 10;
     const double lower_bound = -100.0, upper_bound = 100.0;
-    const int num_learners = 30;
+    const int num_learners = 50;
     const int max_evals = 10000 * dim;
     double mean_fitness = 0.0;
 
@@ -372,7 +372,7 @@ void learningPhase(vector<vector<double>>& population,
         }
 
         // Apply the Solis-Wets local search
-        int max_evals_solis = max_evals - evals > 50 ? 50 : max_evals - evals;
+        int max_evals_solis = max_evals - evals > 25 ? 25 : max_evals - evals;
         soliswets(population[i], fitnesses[i], 0.2, max_evals_solis, -100, 100,
                   gen);
         evals += max_evals_solis;

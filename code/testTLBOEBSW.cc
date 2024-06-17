@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
     const int seed = 43;
     const int T = 10;
     const double lower_bound = -100.0, upper_bound = 100.0;
-    const int num_learners = 30;
+    const int num_learners = 50;
     const int max_evals = 10000 * dim;
     double mean_fitness = 0.0;
 
@@ -190,6 +190,7 @@ void tlbo(vector<vector<double>>& population, vector<double>& fitnesses, int dim
     uniform_int_distribution<> tf_dis(1, 2);
     uniform_int_distribution<> index_dist(0, population.size() - 1);
     int nm = 20;    // Large nm to keep x_ref close to the teacher
+    int generation = 0;
     
     // Find the teacher
     for (int i = 0; i < population.size(); i++) {
@@ -292,9 +293,12 @@ void tlbo(vector<vector<double>>& population, vector<double>& fitnesses, int dim
             if (evals >= max_evals) break;
 
             // Elitist optimization
-            elitistOptimization(population, fitnesses, dim, lower_bound, upper_bound, evals, max_evals, 0.1, gen);
-            if (evals >= max_evals) break;
+            if (generation % 10 == 0) {
+                elitistOptimization(population, fitnesses, dim, lower_bound, upper_bound, evals, max_evals, 0.1, gen);
+                if (evals >= max_evals) break;
+            }
         }
+        generation++;
     }
 }
 
@@ -356,7 +360,7 @@ void elitistOptimization(vector<vector<double>>& population, vector<double>& fit
     sort(elite_indices.begin(), elite_indices.end(), [&fitnesses](int i, int j) { return fitnesses[i] < fitnesses[j]; });
 
     for (int i = 0; i < num_elites; i++) {
-        int max_evals_solis = max_evals - evals > 50 ? 50 : max_evals - evals;
+        int max_evals_solis = max_evals - evals > 250 ? 250 : max_evals - evals;
         soliswets(population[elite_indices[i]], fitnesses[elite_indices[i]], 0.2, max_evals_solis, -100, 100, gen);
         evals += max_evals_solis;
         if (evals >= max_evals) break;
