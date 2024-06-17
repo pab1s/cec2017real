@@ -1,14 +1,11 @@
 extern "C" {
 #include "cec17.h"
 }
-
 #include <algorithm>
 #include <iostream>
 #include <limits>
 #include <random>
 #include <vector>
-
-#include "solis.cc"
 
 using namespace std;
 
@@ -164,7 +161,7 @@ int main(int argc, char* argv[]) {
                                               vector<double>(dim));
             vector<double> fitnesses(num_learners);
 
-            cec17_init("tlbosw", funcid, dim);
+            cec17_init("tlbob", funcid, dim);
 
             initializePopulation(population, fitnesses, dim, lower_bound,
                                  upper_bound, gen);
@@ -283,10 +280,11 @@ void teachingPhase(vector<vector<double>>& population,
                    vector<double>& fitnesses, vector<double>& best_solution,
                    double& best_fitness, int dim, double lower_bound,
                    double upper_bound, Random& gen, int& evals, int max_evals) {
-    uniform_real_distribution<> dis(0, 1);
-    uniform_int_distribution<> int_dist(1, 2);
+    uniform_real_distribution<double> dis(0, 1);
+    uniform_int_distribution<int> int_dist(1, 2);
+    int nm = 20;  // Large nm to keep x_ref close to teacher
     vector<double> mean(dim, 0.0);
-    double tf = int_dist(gen);
+    int tf = int_dist(gen);
 
     // Calculate the mean of the population solutions
     for (const auto& s : population) {
@@ -299,13 +297,31 @@ void teachingPhase(vector<vector<double>>& population,
     // Modify the population solutions
     for (int i = 0; i < population.size(); i++) {
         vector<double> new_solution = population[i];
-
-        // Modify the solution by teaching it
         double eta = dis(gen);
+
+        // Compute x_ref for each individual
+        vector<double> x_ref(dim);
+        double r1 = dis(gen);
+        double r2 = dis(gen);
+
         for (int j = 0; j < dim; j++) {
-            new_solution[j] += eta * (best_solution[j] - tf * mean[j]);
+            if ((best_solution[j] - new_solution[j] < 0) ||
+                (best_solution[j] - new_solution[j] == 0 && r2 < 0.5))
+                x_ref[j] =
+                    best_solution[j] + (pow(r1, 1.0 / (nm + 1)) - 1) *
+                                           (best_solution[j] - lower_bound);
+            else
+                x_ref[j] =
+                    best_solution[j] + (1 - pow(r1, 1.0 / (nm + 1))) *
+                                           (upper_bound - best_solution[j]);
         }
 
+        // Modify the solution by teaching it using the modified reference frame
+        for (int j = 0; j < dim; j++) {
+            new_solution[j] +=
+                eta * (best_solution[j] - tf * mean[j] + (tf - 1) * x_ref[j]);
+        }
+        clip(new_solution, lower_bound, upper_bound);
         double new_fitness = calculateFitness(new_solution);
         evals++;
 
@@ -370,12 +386,6 @@ void learningPhase(vector<vector<double>>& population,
                 best_solution = new_solution;
             }
         }
-
-        // Apply the Solis-Wets local search
-        int max_evals_solis = max_evals - evals > 50 ? 50 : max_evals - evals;
-        soliswets(population[i], fitnesses[i], 0.2, max_evals_solis, -100, 100,
-                  gen);
-        evals += max_evals_solis;
 
         if (evals >= max_evals) break;
     }
