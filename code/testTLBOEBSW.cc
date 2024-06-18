@@ -285,11 +285,11 @@ void tlbo(vector<vector<double>>& population, vector<double>& fitnesses, int dim
             }
 
             // Elitist replacement with mutation
-            elitistReplacement(population, fitnesses, dim, lower_bound, upper_bound, evals, max_evals, gen);
+            elitistReplacement(population, fitnesses, dim, 0.3, lower_bound, upper_bound, evals, max_evals, gen);
             if (evals >= max_evals) break;
 
             // Find duplicate solutions and generate new random ones
-            replaceDuplicates(population, fitnesses, dim, lower_bound, upper_bound, evals, max_evals, 0.3, gen);
+            replaceDuplicates(population, fitnesses, dim, lower_bound, upper_bound, evals, max_evals, 1.0, gen);
             if (evals >= max_evals) break;
 
             // Elitist optimization
@@ -311,6 +311,15 @@ void mutateIndividual(vector<double>& individual, int num_features, double mutat
     normal_distribution<> dis(0, 1);
     int num_mutations = static_cast<int>(num_features * mutation_rate);
     vector<int> mutation_dimension(num_features);
+
+    // If the mutation rate is 1, return new random values
+    if (num_mutations == num_features) {
+        uniform_real_distribution<> dis(lower_bound, upper_bound);
+        for (int i = 0; i < num_features; i++) {
+            individual[i] = dis(gen);
+        }
+        return;
+    }
 
     // Randomly shuffle the dimensions
     iota(mutation_dimension.begin(), mutation_dimension.end(), 0);
