@@ -285,7 +285,7 @@ void tlbo(vector<vector<double>>& population, vector<double>& fitnesses, int dim
             }
 
             // Elitist replacement with mutation
-            elitistReplacement(population, fitnesses, dim, 0.3, lower_bound, upper_bound, evals, max_evals, gen);
+            elitistReplacement(population, fitnesses, dim, 1.0, lower_bound, upper_bound, evals, max_evals, gen);
             if (evals >= max_evals) break;
 
             // Find duplicate solutions and generate new random ones
@@ -309,14 +309,14 @@ double calculateFitness(const vector<double>& solution) {
 template <typename Random>
 void mutateIndividual(vector<double>& individual, int num_features, double mutation_rate, double lower_bound, double upper_bound, Random& gen) {
     normal_distribution<> dis(0, 1);
+    uniform_int_distribution<> range_dist(lower_bound, upper_bound);
     int num_mutations = static_cast<int>(num_features * mutation_rate);
     vector<int> mutation_dimension(num_features);
 
     // If the mutation rate is 1, return new random values
     if (num_mutations == num_features) {
-        uniform_real_distribution<> dis(lower_bound, upper_bound);
         for (int i = 0; i < num_features; i++) {
-            individual[i] = dis(gen);
+            individual[i] = range_dist(gen);
         }
         return;
     }
